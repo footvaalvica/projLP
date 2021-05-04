@@ -2,6 +2,8 @@
 
 :- [codigo_comum].
 
+copiar(X,X).
+
 combinacoes_soma_helper(N, Els, Soma, Combs) :-
     combinacao(N, Els, Comb),
     setof(Comb, sum_list(Comb, Soma), [Combs | _]).
@@ -23,12 +25,21 @@ permutacoes_soma(N, Els, Soma, Perms) :-
 
 % 3.1.3
 
-espaco_fila_horizontal(Fila, Esp, 'h') :-
+get_not_empty_index(Fila, L) :-
+    exclude(=(a), Fila, N_Vazios),
+    setof(Index, (nth0(Index, Fila, X), member(X, N_Vazios)), [L | _]).
 
+espaco_fila_horizontal(Fila, Esp) :-
+    length(Fila, Len),
+    setof(L, get_not_empty_index(Fila, L), IndexList),
+    sort(IndexList, SortedIndexList),
+    append(SortedIndexList, [Len], SortedIndexListPlusEnd),
+    writeln(SortedIndexListPlusEnd),
+    numlist(0,Len,L),
+    writeln(L).
 
 espaco_fila(Fila, Esp, H_V) :-
     espaco_fila_horizontal(Fila, Esp).
-
 
 % 3.1.4
 % 3.1.5
