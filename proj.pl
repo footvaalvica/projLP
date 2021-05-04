@@ -24,41 +24,40 @@ permutacoes_soma(N, Els, Soma, Perms) :-
     findall(X, permutacoes_soma_helper(N, Els, Soma, X), Perms).
 
 % 3.1.3
-
-is_not_adjacent(X, Y) :-
-    Y =\= X + 1.
-
 get_not_empty_index(Fila, L) :-
-    exclude(=(a), Fila, N_Vazios),
+    exclude(var(), Fila, N_Vazios),
     setof(Index, (nth0(Index, Fila, X), member(X, N_Vazios)), [L | _]).
 
-split_points(Fila, Result) :-
+nao_sei_nome(Fila, P, Dif) :-
     length(Fila, L),
-    split_points_aux(Fila, L, Result).
+    L > 1,
+    Fila = [P | R],
+    R = [I| _],
+    Dif is I - (P + 1).
 
-split_points_aux(Fila, Len, Result) :-
-    Fila = [P | R], 
-    nth1(Index, Fila, P),
-    Index < Len,
-    R = [Imp | _],
-    (is_not_adjacent(R,Imp) ->
-        append(Result, [Index], Result_N),
-        Len_N is Len - 1,
-        split_points_aux(R, Len_N, Result_N) 
-    ; Len_N is Len - 1, split_points_aux(R, Len_N, Result_N)).
+replacer(Lista1, Lista2, Ans) :-
+    % para todo o X em Lista 1, obter o elem correspondente a essa index e mete lo numa lista
+    nth0(X, Lista2, Elem),
+    writeln(Elem).
 
-espaco_fila_general(Fila, Esp) :-
+espaco_fila_horizontal(Fila,Esp) :-
     length(Fila, Len),
     setof(L, get_not_empty_index(Fila, L), IndexList),
     sort(IndexList, SortedIndexList),
     append(SortedIndexList, [Len], SortedIndexListPlusEnd),
-    writeln(SortedIndexListPlusEnd),
-    numlist(0,Len,L),
-    subtract(L, SortedIndexListPlusEnd, Result),
-    writeln(Result).
-    
-espaco_fila_horizontal(Fila,Esp) :-
-    espaco_fila_general(Fila,Esp).
+    nao_sei_nome(SortedIndexListPlusEnd, P, Dif),
+
+    P_N is P + 1,
+    Dif_N is Dif + P,
+
+    nth0(P, Fila, Di),
+    Di = [_ | R],
+
+    numlist(P_N, Dif_N, Pop),
+    replacer(Pop, Fila, Ans),
+
+    R = [R_B | _ ],
+    Esp = [R_B, Answer].
 
 espaco_fila(Fila, Esp, H_V) :-
     espaco_fila_horizontal(Fila, Esp).
