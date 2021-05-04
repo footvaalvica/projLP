@@ -25,18 +25,40 @@ permutacoes_soma(N, Els, Soma, Perms) :-
 
 % 3.1.3
 
+is_not_adjacent(X, Y) :-
+    Y =\= X + 1.
+
 get_not_empty_index(Fila, L) :-
     exclude(=(a), Fila, N_Vazios),
     setof(Index, (nth0(Index, Fila, X), member(X, N_Vazios)), [L | _]).
 
-espaco_fila_horizontal(Fila, Esp) :-
+split_points(Fila, Result) :-
+    length(Fila, L),
+    split_points_aux(Fila, L, Result).
+
+split_points_aux(Fila, Len, Result) :-
+    Fila = [P | R], 
+    nth1(Index, Fila, P),
+    Index < Len,
+    R = [Imp | _],
+    (is_not_adjacent(R,Imp) ->
+        append(Result, [Index], Result_N),
+        Len_N is Len - 1,
+        split_points_aux(R, Len_N, Result_N) 
+    ; Len_N is Len - 1, split_points_aux(R, Len_N, Result_N)).
+
+espaco_fila_general(Fila, Esp) :-
     length(Fila, Len),
     setof(L, get_not_empty_index(Fila, L), IndexList),
     sort(IndexList, SortedIndexList),
     append(SortedIndexList, [Len], SortedIndexListPlusEnd),
     writeln(SortedIndexListPlusEnd),
     numlist(0,Len,L),
-    writeln(L).
+    subtract(L, SortedIndexListPlusEnd, Result),
+    writeln(Result).
+    
+espaco_fila_horizontal(Fila,Esp) :-
+    espaco_fila_general(Fila,Esp).
 
 espaco_fila(Fila, Esp, H_V) :-
     espaco_fila_horizontal(Fila, Esp).
