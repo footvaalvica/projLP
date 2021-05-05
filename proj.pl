@@ -33,8 +33,9 @@ permutacoes_soma(N, Els, Soma, Perms) :-
 % 3.1.9
 % 3.1.10
 % 3.1.11
-numeros_comuns(Lst_Perms, Numeros_comuns)
-    select()
+numeros_comuns(Lst_Perms, Numeros_comuns) :-
+    member(Numeros_comuns, Lst_Perms).
+
 % 3.1.12
 % 3.1.13
 % 3.1.14
