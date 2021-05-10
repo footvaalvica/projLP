@@ -137,16 +137,37 @@ permutacoes_soma_espacos(Espacos, Perms_soma) :-
 
 % 3.1.8
 permutacao_possivel_espaco(Perm, Esp, Espacos, Perms_soma) :-
-    writeln(piroca).
+    espacos_com_posicoes_comuns(Espacos, Esp, Esps_com),
+    writeln(Esps_com).
 
 % 3.1.9
 % 3.1.10
 % 3.1.11
 
+length_one(List) :-
+    length(List, 1).
+
 numeros_comuns(Lst_Perms, Numeros_comuns) :-
-    member(Numeros_comuns, Lst_Perms).
+    numeros_comuns_aux2(Lst_Perms, [], Processor),
+    include(length_one(), Processor, Almost),
+    flatten(Almost, LookupList),
+    Lst_Perms = [P | R],
+    findall((X,Y), (member(Y, LookupList), nth1(X, P, Y)), Numeros_comuns).
+
+numeros_comuns_aux2(Lst_Perms, Acl, Numeros_comuns) :-
+    numeros_comuns_aux(Lst_Perms, Acl, Numeros_comuns), !.
+
+numeros_comuns_aux([], Acl, Acl).
+
+numeros_comuns_aux(Lst_Perms, Acl, Numeros_comuns) :-
+    findall(P, (member(X, Lst_Perms), X = [P | R]), Lista),
+    findall(R, (member(X, Lst_Perms), X = [P | R]), NewLstPerms),
+    list_to_set(Lista, ListaSet),
+    append(Acl, [ListaSet], JayZ),
+    numeros_comuns_aux(NewLstPerms, JayZ, Numeros_comuns).
 
 % 3.1.12
 % 3.1.13
 % 3.1.14
 % 3.1.15
+
