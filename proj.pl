@@ -136,14 +136,22 @@ permutacoes_soma_espacos(Espacos, Perms_soma) :-
     bagof(Perm, permutacoes_soma_espacos_aux(Espacos, Perm), Perms_soma).
 
 % 3.1.8
+get_specific_perms(Esps_com, Perms_soma, EspacoPerm) :-
+    member(Y, Esps_com), member(X, Perms_soma), X = [P | _], P = [Prim | R], R = [Sum | _], 
+    Prim == Y, writeln(Sum).
+
 permutacao_possivel_espaco(Perm, Esp, Espacos, Perms_soma) :-
     espacos_com_posicoes_comuns(Espacos, Esp, Esps_com),
-    writeln(Esps_com).
-
+    bagof(Sum, (member(X, Perms_soma), X = [P | _], P = [Prim | R], R = [Sum | _], Prim == Esp), [EspacoPerm | _]),
+    writeln(Esp),
+    writeln(Esps_com),
+    writeln(EspacoPerm).
+    
 % 3.1.9
-% 3.1.10
-% 3.1.11
 
+% 3.1.10
+
+% 3.1.11
 length_one(List) :-
     length(List, 1).
 
