@@ -1,11 +1,17 @@
 % bom dia
 
-:- [codigo_comum].
+:- [codigo_comum, puzzles_publicos].
 
 % código da net
 split(Index,List,Left,Right) :-
     length(Left,Index),       % Actually CREATES a list of fresh variables if "Left" is unbound
     append(Left,Right,List).  % Demand that Left + Right = List.
+
+count_occurrences(List, Occ):-
+    findall([X,L], (bagof(true,member(X,List),Xs), length(Xs,L)), Occ).
+
+% sublist(SL, L, N) - SL é uma sublista de L de comprimento N
+sublista(SL, L, N) :- append([_, SL, _], L), length(SL, N).
 
 % tad espaco
 faz_espaco(Pri, Rem, espaco(Pri, Rem)).
@@ -22,8 +28,6 @@ combinacoes_soma_helper(N, Els, Soma, Combs) :-
 combinacoes_soma(N, Els, Soma, Combs) :-
     findall(X, combinacoes_soma_helper(N, Els, Soma, X), Combs).
 
-% sublist(SL, L, N) - SL é uma sublista de L de comprimento N
-sublist(SL, L, N) :- append([_, SL, _], L), length(SL, N).
 
 % 3.1.2
 permutacoes_soma_helper(N, Els, Soma, Perms) :-
@@ -130,26 +134,84 @@ permutacoes_soma_espacos_aux(Espacos, Perms_soma) :-
     length(Resto, L),
     permutacoes_soma(L, [1,2,3,4,5,6,7,8,9], Soma, Perms),
     Perms_soma_member = [X, Perms]),
-    Perms_soma).
+    [Perms_soma | _]).
     
 permutacoes_soma_espacos(Espacos, Perms_soma) :-
     bagof(Perm, permutacoes_soma_espacos_aux(Espacos, Perm), Perms_soma).
 
 % 3.1.8
-get_specific_perms(Esps_com, Perms_soma, EspacoPerm) :-
-    member(Y, Esps_com), member(X, Perms_soma), X = [P | _], P = [Prim | R], R = [Sum | _], 
-    Prim == Y, writeln(Sum).
+nth0meu(Index, Lista, Var) :-
+    nth0meu(Var, Lista, 0, Index).
+
+nth0meu(_, [], Acl, Acl).
+
+nth0meu(Var, Lista, Acl, Index) :-
+    Lista = [P | R],
+    Var == P,
+    Index = Acl.
+
+nth0meu(Var, Lista, Acl, Index) :-
+    Lista = [P | R],
+    \+ Var == P,
+    Acl_N is Acl + 1,
+    nth0meu(Var, R, Acl_N, Index).
+
+membro(E, [Q | _]) :- E == Q.
+membro(E, [_| R]) :- membro(E, R).
+
+var_comum(Lista1, Lista2, Var) :-
+    bagof(X, (member(X, Lista1), member(Y, Lista2), X == Y), Var).
+
+get_specific_perms(Esps_com, Perms_soma, Esps) :-
+    bagof(X, (member(X, Perms_soma),
+    X = [P | R],
+    member(Y, Esps_com),
+    Y == P), [Esps | _]).
+
+permutacao_possivel_espaco_aux(Permes, Coisa, Esp, Espacos, Perms_soma) :-
+    % fazer debug nesta merda
+    espacos_com_posicoes_comuns(Espacos, Esp, Esps_com),
+    bagof(Y, get_specific_perms(Esps_com, Perms_soma, Y), Esps),
+    bagof(X, (member(X, Perms_soma), X = [P | R], P == Esp), [Espi | _]),
+    resto_de(Esp, Mat),
+    Espi = [_ | [Coisa | _]],
+    findall(F, (member(Nas, Esps),
+    Nas = [A | B],
+    B = [PermEspacos | _],
+    flatten(PermEspacos, CompareList),
+    resto_de(Esp, Mat),
+    resto_de(A, Mateus),
+    var_comum(Mat, Mateus, [Var | _]),
+    nth0meu(Index, Mat, Var),
+    member(F, Coisa),
+    nth0(Index, F, Num),
+    intersection([Num], CompareList, Quase),
+    length(Quase, L), L > 0), Permes).
+
+permutacao_possivel_espaco_todas(Perms, Esp, Espacos, Perms_soma) :-
+    permutacao_possivel_espaco_aux(Permes, Coisa, Esp, Espacos, Perms_soma),
+    resto_de(Esp,Mat),
+    length(Mat, L),
+    count_occurrences(Permes, Occ),
+    findall(I, (member(X, Occ), X = [I | [K | _]], K = L), Perms).
 
 permutacao_possivel_espaco(Perm, Esp, Espacos, Perms_soma) :-
-    espacos_com_posicoes_comuns(Espacos, Esp, Esps_com),
-    bagof(Sum, (member(X, Perms_soma), X = [P | _], P = [Prim | R], R = [Sum | _], Prim == Esp), [EspacoPerm | _]),
-    writeln(Esp),
-    writeln(Esps_com),
-    writeln(EspacoPerm).
-    
+    permutacao_possivel_espaco_todas(Perms, Esp, Espacos, Perms_soma),
+    member(Perm, Perms).
+
 % 3.1.9
+permutacoes_possiveis_espaco(Espacos, Perms_soma, Esp, Perms_poss) :-
+    permutacao_possivel_espaco_todas(Perms, Esp, Espacos, Perms_soma),
+    resto_de(Esp, Mat),
+    append([Mat], [Perms], Perms_poss).
 
 % 3.1.10
+permutacoes_possiveis_espacos(Espacos, Perms_poss_esps) :-
+    bagof(X, permutacoes_possiveis_espacos_aux(Espacos, X), Perms_poss_esps).
+
+permutacoes_possiveis_espacos_aux(Espacos, Perms_poss_esps) :-
+    permutacoes_soma_espacos(Espacos, Perms_soma),
+    bagof(Perms_poss, (member(Esp, Espacos), permutacoes_possiveis_espaco(Espacos, Perms_soma, Esp, Perms_poss)), [Perms_poss_esps | _]).
 
 % 3.1.11
 length_one(List) :-
