@@ -236,7 +236,7 @@ numeros_comuns_aux(Lst_Perms, Acl, Numeros_comuns) :-
     numeros_comuns_aux(NewLstPerms, JayZ, Numeros_comuns).
 
 % 3.1.12
-substitui_comuns(Esp, []).
+substitui_comuns(_, []).
 
 substitui_comuns(Esp, [(Indice, Numero) | R]) :-
     nth1(Indice, Esp, Numero),
@@ -260,25 +260,38 @@ retira_impossiveis_aux([Lst|R], Acl, Output) :-
 
 retira_impossiveis_aux([], Acl, Acl).
 
-retira_impossiveis_aux_2(Perms_Possiveis, Pri, X) :-
+retira_impossiveis_auxL(Perms_Possiveis, Pri, X) :-
     retira_impossiveis_aux(Perms_Possiveis, [], Output),
     reverse(Output, Useful),
     member(X, Useful),
     nth0(Index, Useful, X),
     nth0(Index, Perms_Possiveis, Var),
-    Var = [Pri, Sec].
+    Var = [Pri, _].
 
 retira_impossiveis(Perms_Possiveis, Novas_Perms_Possiveis) :-
-    bagof([Pri, X], retira_impossiveis_aux_2(Perms_Possiveis, Pri, X), Novas_Perms_Possiveis).
+    bagof([Pri, X], retira_impossiveis_auxL(Perms_Possiveis, Pri, X), Novas_Perms_Possiveis).
 
 % 3.1.14
 simplifica(Perms_Possiveis, Novas_Perms_Possiveis) :-
     atribui_comuns(Perms_Possiveis),
-    retira_impossiveis(Perms_Possiveis, Novas_Perms_Possiveis).
+    retira_impossiveis(Perms_Possiveis, A),
+    (\+(Perms_Possiveis == A) -> simplifica(A, Novas_Perms_Possiveis); Novas_Perms_Possiveis = A).
 
 % 3.1.15
-inicializa(Puzzle, Perms_Possiveis).
+inicializa(Puzzle, Perms_Possiveis) :-
+    espacos_puzzle(Puzzle, Espacos),
+    permutacoes_possiveis_espacos(Espacos, Perms_poss_esps),
+    simplifica(Perms_poss_esps, Perms_Possiveis).
 
 % 3.2.1
-escolhe_menos_alternativas(Perms_Possiveis, Escolha) :-
-    writeln(Perms_Possiveis).
+descobrir_menor_comprimento(Perms_Possiveis, L) :-
+    findall(L, (member(X, Perms_Possiveis), X = [_, R], length(R, L)), LengthList),
+    exclude(=(1), LengthList, Mateus),
+    min_list(Mateus, L).
+
+escolhe_menos_alternativas(Perms_Possiveis, X) :-
+    descobrir_menor_comprimento(Perms_Possiveis, K),
+    member(X, Perms_Possiveis),
+    X = [_, R],
+    length(R, L),
+    L == K, !.
