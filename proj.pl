@@ -1,8 +1,9 @@
 % bom dia
 
-:- [codigo_comum, puzzles_publicos].
+:- [codigo_comum].
 
-% código da net
+copiar(X,X).
+
 split(Index,List,Left,Right) :-
     length(Left,Index),       % Actually CREATES a list of fresh variables if "Left" is unbound
     append(Left,Right,List).  % Demand that Left + Right = List.
@@ -10,7 +11,7 @@ split(Index,List,Left,Right) :-
 count_occurrences(List, Occ):-
     findall([X,L], (bagof(true,member(X,List),Xs), length(Xs,L)), Occ).
 
-% sublist(SL, L, N) - SL é uma sublista de L de comprimento N
+% sublist(SL, L, N) - SL e uma sublista de L de comprimento N
 sublista(SL, L, N) :- append([_, SL, _], L), length(SL, N).
 
 % tad espaco
@@ -30,15 +31,15 @@ combinacoes_soma(N, Els, Soma, Combs) :-
 
 
 % 3.1.2
-permutacoes_soma_helper(N, Els, Soma, Perms) :-
+permutacoes_soma_helper(N, Els, Soma, Y) :-
     combinacao(N, Els, X),
     permutation(X, Y),
-    setof(Y, sum_list(Y, Soma), [Perms | _]).
+    sum_list(Y, Soma).
 
 permutacoes_soma(N, Els, Soma, Perms) :-
-    findall(X, permutacoes_soma_helper(N, Els, Soma, X), Perms).
+    setof(X, permutacoes_soma_helper(N, Els, Soma, X), Perms).
 
-% 3.1.3 levar esta mt a sério, resolver bug estranho
+% 3.1.3 levar esta mt a serio, resolver bug estranho
 espaco_fila(Fila, Esp, h) :-
     espacos_fila(h, Fila, Espaco),
     member(Esp, Espaco).
@@ -64,8 +65,8 @@ get_espacos_h(Fila, SplitPoints, Aux, Esp) :-
     Espaco = [Pri | Rem],
     Pri = [_ | EspacoH],
     EspacoH = [Mano | _ ],
-    %R é os split points
-    %Resto é o resto da lista que falta dar split
+    %R e os split points
+    %Resto e o resto da lista que falta dar split
     faz_espaco(Mano, Rem, Espace),
     get_espacos_h(Resto, R, [Espace | Aux], Esp), !.
 
@@ -76,8 +77,8 @@ get_espacos_v(Fila, SplitPoints, Aux, Esp) :-
     split(P, Fila, Resto, Espaco),
     Espaco = [Pri | Rem],
     Pri = [Mano | _],
-    %R é os split points
-    %Resto é o resto da lista que falta dar split
+    %R e os split points
+    %Resto e o resto da lista que falta dar split
     faz_espaco(Mano, Rem, Espace),
     get_espacos_v(Resto, R, [Espace | Aux], Esp), !.
 
@@ -127,17 +128,15 @@ espacos_com_posicoes_comuns(Espacos, Esp, Esps_com) :-
 
 % 3.1.7
 permutacoes_soma_espacos_aux(Espacos, Perms_soma) :-
-    bagof(Perms_soma_member,(
     member(X, Espacos),
     numero_de(X, Soma),
-    resto_de(X, Resto),
-    length(Resto, L),
-    permutacoes_soma(L, [1,2,3,4,5,6,7,8,9], Soma, Perms),
-    Perms_soma_member = [X, Perms]),
-    [Perms_soma | _]).
-    
+    resto_de(X, El),
+    length(El, L),
+    permutacoes_soma(L, [1,2,3,4,5,6,7,8,9], Soma, Els),
+    Perms_soma = [X, Els].
+
 permutacoes_soma_espacos(Espacos, Perms_soma) :-
-    bagof(Perm, permutacoes_soma_espacos_aux(Espacos, Perm), Perms_soma).
+    bagof(X, permutacoes_soma_espacos_aux(Espacos, X), Perms_soma).
 
 % 3.1.8
 nth0meu(Index, Lista, Var) :-
@@ -146,7 +145,7 @@ nth0meu(Index, Lista, Var) :-
 nth0meu(_, [], Acl, Acl).
 
 nth0meu(Var, Lista, Acl, Index) :-
-    Lista = [P | R],
+    Lista = [P | _],
     Var == P,
     Index = Acl.
 
@@ -164,15 +163,15 @@ var_comum(Lista1, Lista2, Var) :-
 
 get_specific_perms(Esps_com, Perms_soma, Esps) :-
     bagof(X, (member(X, Perms_soma),
-    X = [P | R],
+    X = [P | _],
     member(Y, Esps_com),
     Y == P), [Esps | _]).
 
-permutacao_possivel_espaco_aux(Permes, Coisa, Esp, Espacos, Perms_soma) :-
+permutacao_possivel_espaco_aux(Permes, Esp, Espacos, Perms_soma) :-
     % fazer debug nesta merda
     espacos_com_posicoes_comuns(Espacos, Esp, Esps_com),
     bagof(Y, get_specific_perms(Esps_com, Perms_soma, Y), Esps),
-    bagof(X, (member(X, Perms_soma), X = [P | R], P == Esp), [Espi | _]),
+    bagof(X, (member(X, Perms_soma), X = [P | _], P == Esp), [Espi | _]),
     resto_de(Esp, Mat),
     Espi = [_ | [Coisa | _]],
     findall(F, (member(Nas, Esps),
@@ -189,7 +188,7 @@ permutacao_possivel_espaco_aux(Permes, Coisa, Esp, Espacos, Perms_soma) :-
     length(Quase, L), L > 0), Permes).
 
 permutacao_possivel_espaco_todas(Perms, Esp, Espacos, Perms_soma) :-
-    permutacao_possivel_espaco_aux(Permes, Coisa, Esp, Espacos, Perms_soma),
+    permutacao_possivel_espaco_aux(Permes, Esp, Espacos, Perms_soma),
     resto_de(Esp,Mat),
     length(Mat, L),
     count_occurrences(Permes, Occ),
@@ -209,9 +208,9 @@ permutacoes_possiveis_espaco(Espacos, Perms_soma, Esp, Perms_poss) :-
 permutacoes_possiveis_espacos(Espacos, Perms_poss_esps) :-
     bagof(X, permutacoes_possiveis_espacos_aux(Espacos, X), Perms_poss_esps).
 
-permutacoes_possiveis_espacos_aux(Espacos, Perms_poss_esps) :-
+permutacoes_possiveis_espacos_aux(Espacos, Perms_poss) :-
     permutacoes_soma_espacos(Espacos, Perms_soma),
-    bagof(Perms_poss, (member(Esp, Espacos), permutacoes_possiveis_espaco(Espacos, Perms_soma, Esp, Perms_poss)), [Perms_poss_esps | _]).
+    member(Esp, Espacos), permutacoes_possiveis_espaco(Espacos, Perms_soma, Esp, Perms_poss).
 
 % 3.1.11
 length_one(List) :-
@@ -221,7 +220,7 @@ numeros_comuns(Lst_Perms, Numeros_comuns) :-
     numeros_comuns_aux2(Lst_Perms, [], Processor),
     include(length_one(), Processor, Almost),
     flatten(Almost, LookupList),
-    Lst_Perms = [P | R],
+    Lst_Perms = [P | _],
     findall((X,Y), (member(Y, LookupList), nth1(X, P, Y)), Numeros_comuns).
 
 numeros_comuns_aux2(Lst_Perms, Acl, Numeros_comuns) :-
@@ -237,7 +236,49 @@ numeros_comuns_aux(Lst_Perms, Acl, Numeros_comuns) :-
     numeros_comuns_aux(NewLstPerms, JayZ, Numeros_comuns).
 
 % 3.1.12
-% 3.1.13
-% 3.1.14
-% 3.1.15
+substitui_comuns(Esp, []).
 
+substitui_comuns(Esp, [(Indice, Numero) | R]) :-
+    nth1(Indice, Esp, Numero),
+    substitui_comuns(Esp, R).
+
+atribui_comuns([Lst|R]) :-
+    Lst = [Esp, Perms],
+    numeros_comuns(Perms, Lst_Comuns),
+    substitui_comuns(Esp, Lst_Comuns), atribui_comuns(R), !.
+  
+atribui_comuns([]).
+
+% 3.1.13
+se_unifica(Lista1, Lista2) :-
+    subsumes_term(Lista1, Lista2).
+
+retira_impossiveis_aux([Lst|R], Acl, Output) :-
+    Lst = [Fir, Sec],
+    findall(X, (member(X, Sec), subsumes_term(Fir, X)), Out),
+    retira_impossiveis_aux(R, [Out | Acl], Output).
+
+retira_impossiveis_aux([], Acl, Acl).
+
+retira_impossiveis_aux_2(Perms_Possiveis, Pri, X) :-
+    retira_impossiveis_aux(Perms_Possiveis, [], Output),
+    reverse(Output, Useful),
+    member(X, Useful),
+    nth0(Index, Useful, X),
+    nth0(Index, Perms_Possiveis, Var),
+    Var = [Pri, Sec].
+
+retira_impossiveis(Perms_Possiveis, Novas_Perms_Possiveis) :-
+    bagof([Pri, X], retira_impossiveis_aux_2(Perms_Possiveis, Pri, X), Novas_Perms_Possiveis).
+
+% 3.1.14
+simplifica(Perms_Possiveis, Novas_Perms_Possiveis) :-
+    atribui_comuns(Perms_Possiveis),
+    retira_impossiveis(Perms_Possiveis, Novas_Perms_Possiveis).
+
+% 3.1.15
+inicializa(Puzzle, Perms_Possiveis).
+
+% 3.2.1
+escolhe_menos_alternativas(Perms_Possiveis, Escolha) :-
+    writeln(Perms_Possiveis).
