@@ -289,9 +289,34 @@ descobrir_menor_comprimento(Perms_Possiveis, L) :-
     exclude(=(1), LengthList, Mateus),
     min_list(Mateus, L).
 
-escolhe_menos_alternativas(Perms_Possiveis, X) :-
+escolhe_menos_alternativas(Perms_Possiveis, Escolha) :-
     descobrir_menor_comprimento(Perms_Possiveis, K),
-    member(X, Perms_Possiveis),
-    X = [_, R],
+    member(Escolha, Perms_Possiveis),
+    Escolha = [_, R],
     length(R, L),
     L == K, !.
+
+% 3.2.2
+experimenta_perm(Escolha, Perms_Possiveis, Novas_Perms_Possiveis) :-
+    Escolha = [Esp, Lst_Perms],
+    member(Perm, Lst_Perms),
+    Esp = Perm,
+    select(Escolha, Perms_Possiveis, [Esp, [Perm]], Novas_Perms_Possiveis).
+
+% 3.2.3
+descobrir(Perms_Possiveis, Mateus) :-
+    findall(L, (member(X, Perms_Possiveis), X = [_, R], length(R, L)), LengthList),
+    exclude(=(1), LengthList, Mateus).
+
+resolve_aux(Perms_Possiveis, Novas_Perms_Possiveis) :-
+    descobrir(Perms_Possiveis, Lista),
+    ((Lista == []) -> Novas_Perms_Possiveis = Perms_Possiveis;
+    escolhe_menos_alternativas(Perms_Possiveis, Escolha),
+    experimenta_perm(Escolha, Perms_Possiveis, A),
+    simplifica(A, B),
+    resolve_aux(B, Novas_Perms_Possiveis)), !.
+
+% 3.1.1
+resolve(Puz) :-
+    inicializa(Puz, Perms_Possiveis),
+    resolve_aux(Perms_Possiveis, _).
