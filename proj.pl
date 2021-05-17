@@ -1,54 +1,69 @@
-% bom dia
+% Mateus Leite Pinho, ist199282
+
+% <Kakuro>
 
 :- [codigo_comum].
 
-copiar(X,X).
+% split(Index, Lista,L, R) afirma que L e R são as listas resultantes
+% de dividir Lista na posicao Index.
+split(Index, Lista,L, R) :-
+    length(L, Index),
+    append(L, R, Lista).
 
-split(Index,List,Left,Right) :-
-    length(Left,Index),       % Actually CREATES a list of fresh variables if "Left" is unbound
-    append(Left,Right,List).  % Demand that Left + Right = List.
+% count_occurrences(Lista, Occurencias) afirma que Occurencias 
+% é a lista de ocurrencias de Lista.
+% Exemplo: [a,b,b,b] faz [[a, 1], [b,3]]
+count_occurrences(Lista, Occurencias):-
+    findall([X,L], (bagof(true,member(X,Lista),Y), length(Y,L)), Occurencias).
 
-count_occurrences(List, Occ):-
-    findall([X,L], (bagof(true,member(X,List),Xs), length(Xs,L)), Occ).
-
-% sublist(SL, L, N) - SL e uma sublista de L de comprimento N
+% sublist(SL, L, N) afirma SL e uma sublista de L de comprimento N
 sublista(SL, L, N) :- append([_, SL, _], L), length(SL, N).
 
-% tad espaco
+% TAD espaco
 faz_espaco(Pri, Rem, espaco(Pri, Rem)).
 numero_de(espaco(Num, _), Num).
 resto_de(espaco(_, Rem), Rem).
 resto_vazio(Esp) :- resto_de(Esp, Rem), length(Rem, 0).
 
-%3.1.1
+:- [codigo_comum].
 
-combinacoes_soma_helper(N, Els, Soma, Combs) :-
+% combinacoes_soma_helper(N, Els, Soma, Combs) afirma que Combs é uma combinação
+combinacoes_soma_helper(N, Els, Soma, Comb) :-
     combinacao(N, Els, Comb),
-    setof(Comb, sum_list(Comb, Soma), [Combs | _]).
+    sum_list(Comb, Soma).
 
+/* combinacoes_soma(N, Els, Soma, Combs) afirma que Combs e a 
+lista ordenada cujos elementos sao as combinacoes N a N, 
+dos elementos de Els cuja soma e Soma. */
 combinacoes_soma(N, Els, Soma, Combs) :-
     findall(X, combinacoes_soma_helper(N, Els, Soma, X), Combs).
 
-
-% 3.1.2
-permutacoes_soma_helper(N, Els, Soma, Y) :-
+% permutacoes_soma_aux(N, Els, Soma, Combs) afirma que Y é uma permutacao.
+permutacoes_soma_aux(N, Els, Soma, Y) :-
     combinacao(N, Els, X),
     permutation(X, Y),
     sum_list(Y, Soma).
 
+% permutacoes_soma_aux(N, Els, Soma, Combs) afirma que Perms é a lista
+% 
 permutacoes_soma(N, Els, Soma, Perms) :-
-    setof(X, permutacoes_soma_helper(N, Els, Soma, X), Perms).
+    setof(X, permutacoes_soma_aux(N, Els, Soma, X), Perms).
 
-% 3.1.3 levar esta mt a serio, resolver bug estranho
+% 3.1.3
+
+% espaco fila para espacos horizontais
 espaco_fila(Fila, Esp, h) :-
     espacos_fila(h, Fila, Espaco),
     member(Esp, Espaco).
-    
+
+% espaco fila para espacos verticais
 espaco_fila(Fila, Esp, v) :-
     espacos_fila(v, Fila, Espaco),
     member(Esp, Espaco).
 
 % 3.1.4
+
+% cria a lista 
 split_list(Fila, Y) :-
     exclude(var, Fila, Splits),
     member(X, Splits),
@@ -242,10 +257,12 @@ substitui_comuns(Esp, [(Indice, Numero) | R]) :-
     nth1(Indice, Esp, Numero),
     substitui_comuns(Esp, R).
 
-atribui_comuns([Lst|R]) :-
-    Lst = [Esp, Perms],
+atribui_comuns(Perms_Possiveis) :-
+    Perms_Possiveis = [Lista|Resto],
+    Lista = [Esp, Perms],
     numeros_comuns(Perms, Lst_Comuns),
-    substitui_comuns(Esp, Lst_Comuns), atribui_comuns(R), !.
+    substitui_comuns(Esp, Lst_Comuns), 
+    atribui_comuns(Resto), !.
   
 atribui_comuns([]).
 
